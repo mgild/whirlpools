@@ -1,0 +1,21 @@
+[package]
+name = "orca_whirlpools_utils"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["floats"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:serde", "dep:tsify"]
+floats = ["dep:libm"]
+
+[dependencies]
+ethnum = { version = "^1.5.0" }
+libm = { version = "^0.2.1", optional = true }
+wasm-bindgen = { version = "^0.2.93", optional = true }
+serde = { version = "^1.0.207", features = ["derive"], optional = true }
+serde-wasm-bindgen = { version = "^0.6.5", optional = true }
+tsify = { version = "^0.4.5", features = ["js"], optional = true }
+
+[dev-dependencies]
+print-no-std = { version = "^0.1.0"}
+approx = { version = "^0.3.2" }

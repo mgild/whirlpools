@@ -1,0 +1,11 @@
+{
+  "name": "@orca-so/whirlpools-rust-utils",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "cargo build -p orca_whirlpools_utils",
+    "test": "cargo test -p orca_whirlpools_utils --lib",
+    "format": "cargo clippy --fix --allow-dirty --allow-staged && cargo fmt",
+    "lint": "cargo clippy",
+    "clean": "cargo clean -p orca_whirlpools_utils"
+  }
+}

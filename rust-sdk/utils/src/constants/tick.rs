@@ -1,0 +1,4 @@
+pub const TICK_ARRAY_SIZE: usize = 88;
+pub const FULL_RANGE_ONLY_TICK_SPACING_THRESHOLD: u16 = 32768; // 2^15
+pub const MIN_TICK_INDEX: i32 = -443636;
+pub const MAX_TICK_INDEX: i32 = 443636;

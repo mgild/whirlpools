@@ -2859,6 +2859,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@orca-so/whirlpools-docs-legacy@workspace:docs/legacy"
   dependencies:
+    "@orca-so/whirlpools": "npm:*"
     "@orca-so/whirlpools-sdk": "npm:*"
     typedoc: "npm:^0.26.5"
     typescript: "npm:^5.5.4"
@@ -2878,6 +2879,7 @@ __metadata:
   resolution: "@orca-so/whirlpools-docs-ts@workspace:docs/ts"
   dependencies:
     "@orca-so/whirlpools": "npm:*"
+    "@orca-so/whirlpools-sdk": "npm:*"
     typedoc: "npm:^0.26.5"
     typescript: "npm:^5.5.4"
   languageName: unknown
@@ -2949,6 +2951,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@orca-so/whirlpools-rust-utils@npm:*, @orca-so/whirlpools-rust-utils@workspace:rust-sdk/utils":
+  version: 0.0.0-use.local
+  resolution: "@orca-so/whirlpools-rust-utils@workspace:rust-sdk/utils"
+  languageName: unknown
+  linkType: soft
+
 "@orca-so/whirlpools-rust@npm:*, @orca-so/whirlpools-rust@workspace:rust-sdk/whirlpool":
   version: 0.0.0-use.local
   resolution: "@orca-so/whirlpools-rust@workspace:rust-sdk/whirlpool"
@@ -2992,11 +3000,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@orca-so/whirlpools-utils@npm:*, @orca-so/whirlpools-utils@workspace:ts-sdk/utils":
+  version: 0.0.0-use.local
+  resolution: "@orca-so/whirlpools-utils@workspace:ts-sdk/utils"
+  dependencies:
+    "@orca-so/whirlpools-rust-utils": "npm:*"
+    wasm-pack: "npm:^0.13.0"
+  languageName: unknown
+  linkType: soft
+
 "@orca-so/whirlpools@npm:*, @orca-so/whirlpools@workspace:ts-sdk/whirlpool":
   version: 0.0.0-use.local
   resolution: "@orca-so/whirlpools@workspace:ts-sdk/whirlpool"
   dependencies:
     "@orca-so/whirlpools-client": "npm:*"
+    "@orca-so/whirlpools-utils": "npm:*"
     typescript: "npm:^5.5.4"
   languageName: unknown
   linkType: soft
@@ -3065,12 +3083,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/core@npm:1.13.0":
-  version: 1.13.0
-  resolution: "@shikijs/core@npm:1.13.0"
+"@shikijs/core@npm:1.12.1":
+  version: 1.12.1
+  resolution: "@shikijs/core@npm:1.12.1"
   dependencies:
     "@types/hast": "npm:^3.0.4"
-  checksum: 10c0/271ce7f3a6589d0dc5f7e8028fd2a471d4545f87f569d9f33f69fa443d3de52d2b0011b57309eeb2e954c7e0bf5134e9c21fcb69fa0ad5b9590be5163869919a
+  checksum: 10c0/196df410a63a7cee3539f7ea46ee2241f7d6876af622041330b9c2725e9efa2993a2f0e24938d1dd1c214222fa03e18e61b4c849d323b06505387d93acadb918
   languageName: node
   linkType: hard
 
@@ -4608,10 +4626,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/unist@npm:*, @types/unist@npm:^3.0.0":
-  version: 3.0.3
-  resolution: "@types/unist@npm:3.0.3"
-  checksum: 10c0/2b1e4adcab78388e088fcc3c0ae8700f76619dbcb4741d7d201f87e2cb346bfc29a89003cfea2d76c996e1061452e14fcd737e8b25aacf949c1f2d6b2bc3dd60
+"@types/unist@npm:*":
+  version: 3.0.2
+  resolution: "@types/unist@npm:3.0.2"
+  checksum: 10c0/39f220ce184a773c55c18a127062bfc4d0d30c987250cd59bab544d97be6cfec93717a49ef96e81f024b575718f798d4d329eb81c452fc57d6d051af8b043ebf
   languageName: node
   linkType: hard
 
@@ -4619,6 +4637,13 @@ __metadata:
   version: 2.0.11
   resolution: "@types/unist@npm:2.0.11"
   checksum: 10c0/24dcdf25a168f453bb70298145eb043cfdbb82472db0bc0b56d6d51cd2e484b9ed8271d4ac93000a80da568f2402e9339723db262d0869e2bf13bc58e081768d
+  languageName: node
+  linkType: hard
+
+"@types/unist@npm:^3.0.0":
+  version: 3.0.3
+  resolution: "@types/unist@npm:3.0.3"
+  checksum: 10c0/2b1e4adcab78388e088fcc3c0ae8700f76619dbcb4741d7d201f87e2cb346bfc29a89003cfea2d76c996e1061452e14fcd737e8b25aacf949c1f2d6b2bc3dd60
   languageName: node
   linkType: hard
 
@@ -5367,6 +5392,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^0.26.1":
+  version: 0.26.1
+  resolution: "axios@npm:0.26.1"
+  dependencies:
+    follow-redirects: "npm:^1.14.8"
+  checksum: 10c0/77ad7f1e6ca04fcd3fa8af1795b09d8b7c005b71a31f28d99ba40cda0bdcc12a4627801d7fac5efa62b9f667a8402bd54c669039694373bc8d44f6be611f785c
+  languageName: node
+  linkType: hard
+
 "axios@npm:^1.7.2":
   version: 1.7.3
   resolution: "axios@npm:1.7.3"
@@ -5501,6 +5535,17 @@ __metadata:
   version: 2.3.0
   resolution: "binary-extensions@npm:2.3.0"
   checksum: 10c0/75a59cafc10fb12a11d510e77110c6c7ae3f4ca22463d52487709ca7f18f69d886aa387557cc9864fbdb10153d0bdb4caacabf11541f55e89ed6e18d12ece2b5
+  languageName: node
+  linkType: hard
+
+"binary-install@npm:^1.0.1":
+  version: 1.1.0
+  resolution: "binary-install@npm:1.1.0"
+  dependencies:
+    axios: "npm:^0.26.1"
+    rimraf: "npm:^3.0.2"
+    tar: "npm:^6.1.11"
+  checksum: 10c0/c0c94a81262c037a1a84f12ff9acfe667b7938b126e764b0f066d5be128d21e0bb8ac5700f4d89f8f7b860b660882deddeaca300dea0ff218d94676999a133a1
   languageName: node
   linkType: hard
 
@@ -7880,7 +7925,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.15.6":
   version: 1.15.6
   resolution: "follow-redirects@npm:1.15.6"
   peerDependenciesMeta:
@@ -13656,12 +13701,12 @@ __metadata:
   linkType: hard
 
 "shiki@npm:^1.9.1":
-  version: 1.13.0
-  resolution: "shiki@npm:1.13.0"
+  version: 1.12.1
+  resolution: "shiki@npm:1.12.1"
   dependencies:
-    "@shikijs/core": "npm:1.13.0"
+    "@shikijs/core": "npm:1.12.1"
     "@types/hast": "npm:^3.0.4"
-  checksum: 10c0/0536b255b2522fe89d5ef1be211a30a64ad18c50dc576d6a2afee2398c0d12e9135d9c80c1dfdc25a19e97ce90c3a2b9a2778549b56ccd22ed5ed941274bf918
+  checksum: 10c0/1afe9a0002a215fec6960e48284b207d4714de192f4a2223f748a640c0de17a45f2c76ebc4c4020c308bd441c6f7b913eecbd97d346ddd681db0a643c46190fc
   languageName: node
   linkType: hard
 
@@ -14929,6 +14974,17 @@ __metadata:
     unist-util-stringify-position: "npm:^4.0.0"
     vfile-message: "npm:^4.0.0"
   checksum: 10c0/96b7e060b332ff1b05462053bd9b0f39062c00c5eabb78fc75603cc808d5f77c4379857fffca3e30a28e0aad2d51c065dfcd4a43fbe15b1fc9c2aaa9ac1be8e1
+  languageName: node
+  linkType: hard
+
+"wasm-pack@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "wasm-pack@npm:0.13.0"
+  dependencies:
+    binary-install: "npm:^1.0.1"
+  bin:
+    wasm-pack: run.js
+  checksum: 10c0/71ed64c9b0082d51098ec71041ce68a9323d7a0027e3a9c0b694c5931f83ce2a58f1df7255c68239ca4ab702e2daf5c550a7886f8af048f0cb76945a510268b6
   languageName: node
   linkType: hard
 
