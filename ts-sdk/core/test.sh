@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-NODE_SIZE=$(gzip -c dist/nodejs/orca_whirlpools_utils_js_bindings_bg.wasm | wc -c)
+NODE_SIZE=$(gzip -c dist/nodejs/orca_whirlpools_core_js_bindings_bg.wasm | wc -c)
 echo "Node wasm binary gzip size: $NODE_SIZE"
-WEB_SIZE=$(gzip -c dist/web/orca_whirlpools_utils_js_bindings_bg.wasm | wc -c)
+WEB_SIZE=$(gzip -c dist/web/orca_whirlpools_core_js_bindings_bg.wasm | wc -c)
 echo "Web wasm binary gzip side: $WEB_SIZE"
 SIZE=$(( $NODE_SIZE > $WEB_SIZE ? $NODE_SIZE : $WEB_SIZE ))
 

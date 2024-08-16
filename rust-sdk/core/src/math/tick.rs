@@ -229,30 +229,11 @@ pub fn is_full_range_only(tick_spacing: u16) -> bool {
     tick_spacing >= FULL_RANGE_ONLY_TICK_SPACING_THRESHOLD
 }
 
-/// Check if a position is in range.
-/// When a position is in range it is earning fees and rewards
-///
-/// # Parameters
-/// - `tick_current_index` - A i32 integer representing the tick index of the pool
-/// - `tick_lower_index` - A i32 integer representing the lower tick index of the position
-/// - `tick_upper_index` - A i32 integer representing the upper tick index of the position
-///
-/// # Returns
-/// - A boolean value indicating if the position is in range
-#[cfg_attr(feature = "wasm", wasm_bindgen(js_name = isPositionInRange, skip_jsdoc))]
-pub fn is_position_in_range(
-    tick_current_index: i32,
-    tick_lower_index: i32,
-    tick_upper_index: i32,
-) -> bool {
-    tick_current_index >= tick_lower_index && tick_current_index < tick_upper_index
-}
-
 // Private functions
 
 fn mul_shift_96(n0: u128, n1: u128) -> u128 {
     let mul = <U256>::from(n0) * <U256>::from(n1);
-    mul.wrapping_shl(96).try_into().unwrap()
+    mul.wrapping_shr(96).try_into().unwrap()
 }
 
 fn get_sqrt_price_positive_tick(tick: i32) -> u128 {
@@ -463,14 +444,5 @@ mod tests {
         assert!(!is_full_range_only(
             FULL_RANGE_ONLY_TICK_SPACING_THRESHOLD - 1
         ));
-    }
-
-    #[test]
-    fn test_is_position_in_range() {
-        assert!(!is_position_in_range(85, 90, 100));
-        assert!(is_position_in_range(90, 90, 100));
-        assert!(is_position_in_range(95, 90, 100));
-        assert!(!is_position_in_range(100, 90, 100));
-        assert!(!is_position_in_range(105, 90, 100));
     }
 }

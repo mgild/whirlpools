@@ -901,7 +901,7 @@ name = "orca_whirlpools"
 version = "0.1.0"
 dependencies = [
  "orca_whirlpools_client",
- "orca_whirlpools_utils",
+ "orca_whirlpools_core",
 ]
 
 [[package]]
@@ -916,7 +916,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "orca_whirlpools_utils"
+name = "orca_whirlpools_core"
 version = "0.1.0"
 dependencies = [
  "ethnum",

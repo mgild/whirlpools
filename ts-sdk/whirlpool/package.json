@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@orca-so/whirlpools-client": "*",
-    "@orca-so/whirlpools-utils": "*"
+    "@orca-so/whirlpools-core": "*"
   },
   "devDependencies": {
     "typescript": "^5.5.4"

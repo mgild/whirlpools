@@ -1,5 +1,6 @@
 use core::ops::Shl;
 
+use ethnum::U256;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
@@ -22,6 +23,8 @@ use crate::{CollectFeesQuote, U128};
 /// - `tick_current_index`: The current tick index
 /// - `tick_lower_index`: The lower tick index of the position
 /// - `tick_upper_index`: The upper tick index of the position
+/// - `transfer_fee_a`: The transfer fee for token A in bps
+/// - `transfer_fee_b`: The transfer fee for token B in bps
 ///
 /// # Returns
 /// - `CollectFeesQuote`: The fees owed for token A and token B
@@ -42,6 +45,8 @@ pub fn collect_fees_quote(
     tick_current_index: i32,
     tick_lower_index: i32,
     tick_upper_index: i32,
+    transfer_fee_a: Option<u16>,
+    transfer_fee_b: Option<u16>,
 ) -> CollectFeesQuote {
     let mut fee_growth_below_a_x_64: u128 = fee_growth_outside_a_lower.into();
     let mut fee_growth_above_a_x_64: u128 = fee_growth_outside_a_upper.into();
@@ -59,35 +64,44 @@ pub fn collect_fees_quote(
     let position_fee_owed_b_u128: u128 = position_fee_owed_b.into();
 
     if tick_current_index < tick_lower_index {
-        fee_growth_below_a_x_64 = fee_growth_global_a_x_64.wrapping_sub(fee_growth_below_a_x_64);
-        fee_growth_below_b_x_64 = fee_growth_global_b_x_64.wrapping_sub(fee_growth_below_b_x_64);
+        fee_growth_below_a_x_64 = fee_growth_global_a_x_64.saturating_sub(fee_growth_below_a_x_64);
+        fee_growth_below_b_x_64 = fee_growth_global_b_x_64.saturating_sub(fee_growth_below_b_x_64);
     }
 
     if tick_current_index > tick_upper_index {
-        fee_growth_above_a_x_64 = fee_growth_global_a_x_64.wrapping_sub(fee_growth_above_a_x_64);
-        fee_growth_above_b_x_64 = fee_growth_global_b_x_64.wrapping_sub(fee_growth_above_b_x_64);
+        fee_growth_above_a_x_64 = fee_growth_global_a_x_64.saturating_sub(fee_growth_above_a_x_64);
+        fee_growth_above_b_x_64 = fee_growth_global_b_x_64.saturating_sub(fee_growth_above_b_x_64);
     }
 
     let fee_growth_inside_a_x_64 = fee_growth_global_a_x_64
-        .wrapping_sub(fee_growth_below_a_x_64)
-        .wrapping_sub(fee_growth_above_a_x_64);
+        .saturating_sub(fee_growth_below_a_x_64)
+        .saturating_sub(fee_growth_above_a_x_64);
 
     let fee_growth_inside_b_x_64 = fee_growth_global_b_x_64
-        .wrapping_sub(fee_growth_below_b_x_64)
-        .wrapping_sub(fee_growth_above_b_x_64);
+        .saturating_sub(fee_growth_below_b_x_64)
+        .saturating_sub(fee_growth_above_b_x_64);
 
-    let fee_owed_delta_a_x_64 = fee_growth_inside_a_x_64
-        .wrapping_sub(fee_growth_checkpoint_a_x_64)
-        .wrapping_mul(position_liquidity_u128);
+    let fee_owed_delta_a_x_64: U256 = <U256>::from(fee_growth_inside_a_x_64)
+        .saturating_sub(fee_growth_checkpoint_a_x_64.into())
+        .saturating_mul(position_liquidity_u128.into())
+        .shl(64);
 
-    let fee_owed_delta_b_x_64 = fee_growth_inside_b_x_64
-        .wrapping_sub(fee_growth_checkpoint_b_x_64)
-        .wrapping_mul(position_liquidity_u128);
+    let fee_owed_delta_b_x_64: U256 = <U256>::from(fee_growth_inside_b_x_64)
+        .saturating_sub(fee_growth_checkpoint_b_x_64.into())
+        .saturating_mul(position_liquidity_u128.into())
+        .shl(64);
 
-    let fee_owed_a: u128 = position_fee_owed_a_u128 + fee_owed_delta_a_x_64.shl(64);
-    let fee_owed_b: u128 = position_fee_owed_b_u128 + fee_owed_delta_b_x_64.shl(64);
+    let fee_owed_delta_a: u128 = fee_owed_delta_a_x_64.try_into().unwrap();
+    let fee_owed_delta_b: u128 = fee_owed_delta_b_x_64.try_into().unwrap();
 
-    // TOOD: remove transfer fee deduction
+    let withdrawable_fee_a: u128 = position_fee_owed_a_u128 + fee_owed_delta_a;
+    let withdrawable_fee_b: u128 = position_fee_owed_b_u128 + fee_owed_delta_b;
+
+    let transfer_fee_a: u128 = transfer_fee_a.unwrap_or(0).into();
+    let transfer_fee_b: u128 = transfer_fee_b.unwrap_or(0).into();
+
+    let fee_owed_a = withdrawable_fee_a - withdrawable_fee_a * transfer_fee_a / 10000u128;
+    let fee_owed_b = withdrawable_fee_b - withdrawable_fee_b * transfer_fee_b / 10000u128;
 
     CollectFeesQuote {
         fee_owed_a: fee_owed_a.into(),
@@ -116,6 +130,8 @@ mod tests {
             5,
             3,
             7,
+            None,
+            None,
         );
         assert_eq!(result1.fee_owed_a, 1000);
         assert_eq!(result1.fee_owed_b, 1100);
@@ -138,6 +154,8 @@ mod tests {
             5,
             5,
             7,
+            None,
+            None,
         );
         assert_eq!(result1.fee_owed_a, 1000);
         assert_eq!(result1.fee_owed_b, 1100);
@@ -160,6 +178,8 @@ mod tests {
             9,
             7,
             5,
+            None,
+            None,
         );
         assert_eq!(result2.fee_owed_a, 2000);
         assert_eq!(result2.fee_owed_b, 2200);
@@ -180,8 +200,10 @@ mod tests {
             5,
             5,
             7,
+            None,
+            None,
         );
-        assert_eq!(result3.fee_owed_a, 2700);
-        assert_eq!(result3.fee_owed_b, 3000);
+        assert_eq!(result3.fee_owed_a, 3000);
+        assert_eq!(result3.fee_owed_b, 3300);
     }
 }

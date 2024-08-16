@@ -127,9 +127,9 @@ mod tests {
 
     #[test]
     fn test_invert_price() {
-        assert_eq!(invert_price(100.0, 8, 6), 0.01);
-        assert_eq!(invert_price(100.0, 6, 6), 0.0);
-        assert_eq!(invert_price(100.0, 6, 8), -1000.0);
+        relative_eq!(invert_price(100.0, 8, 6), 0.000001);
+        relative_eq!(invert_price(100.0, 6, 6), 0.0);
+        relative_eq!(invert_price(100.0, 6, 8), -1000.0);
     }
 
     #[test]

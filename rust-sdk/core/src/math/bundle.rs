@@ -91,26 +91,26 @@ mod tests {
     #[test]
     fn test_is_position_bundle_full() {
         let bundle: [u8; POSITION_BUNDLE_BYTES] = [0; POSITION_BUNDLE_BYTES];
-        assert_eq!(is_position_bundle_full(&bundle), false);
+        assert!(!is_position_bundle_full(&bundle));
 
         let bundle: [u8; POSITION_BUNDLE_BYTES] = [255; POSITION_BUNDLE_BYTES];
-        assert_eq!(is_position_bundle_full(&bundle), true);
+        assert!(is_position_bundle_full(&bundle));
 
         let mut bundle: [u8; POSITION_BUNDLE_BYTES] = [0; POSITION_BUNDLE_BYTES];
         bundle[0] = 0b11111111;
-        assert_eq!(is_position_bundle_full(&bundle), false);
+        assert!(!is_position_bundle_full(&bundle));
     }
 
     #[test]
     fn test_is_position_bundle_empty() {
         let bundle: [u8; POSITION_BUNDLE_BYTES] = [0; POSITION_BUNDLE_BYTES];
-        assert_eq!(is_position_bundle_empty(&bundle), true);
+        assert!(is_position_bundle_empty(&bundle));
 
         let bundle: [u8; POSITION_BUNDLE_BYTES] = [255; POSITION_BUNDLE_BYTES];
-        assert_eq!(is_position_bundle_empty(&bundle), false);
+        assert!(!is_position_bundle_empty(&bundle));
 
         let mut bundle: [u8; POSITION_BUNDLE_BYTES] = [0; POSITION_BUNDLE_BYTES];
         bundle[0] = 0b111111;
-        assert_eq!(is_position_bundle_empty(&bundle), false);
+        assert!(!is_position_bundle_empty(&bundle));
     }
 }

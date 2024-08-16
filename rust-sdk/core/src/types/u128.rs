@@ -35,6 +35,14 @@ impl From<U128> for u128 {
 }
 
 #[cfg(feature = "wasm")]
+impl From<U128> for U256 {
+    fn from(value: U128) -> U256 {
+        let u_128: u128 = JsValue::from(value).try_into().unwrap();
+        <U256>::from(u_128)
+    }
+}
+
+#[cfg(feature = "wasm")]
 impl From<u128> for U128 {
     fn from(value: u128) -> U128 {
         JsValue::from(value).unchecked_into()

@@ -2855,6 +2855,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@orca-so/whirlpools-core@npm:*, @orca-so/whirlpools-core@workspace:ts-sdk/core":
+  version: 0.0.0-use.local
+  resolution: "@orca-so/whirlpools-core@workspace:ts-sdk/core"
+  dependencies:
+    "@orca-so/whirlpools-rust-core": "npm:*"
+    wasm-pack: "npm:^0.13.0"
+  languageName: unknown
+  linkType: soft
+
 "@orca-so/whirlpools-docs-legacy@npm:*, @orca-so/whirlpools-docs-legacy@workspace:docs/legacy":
   version: 0.0.0-use.local
   resolution: "@orca-so/whirlpools-docs-legacy@workspace:docs/legacy"
@@ -2951,9 +2960,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orca-so/whirlpools-rust-utils@npm:*, @orca-so/whirlpools-rust-utils@workspace:rust-sdk/utils":
+"@orca-so/whirlpools-rust-core@npm:*, @orca-so/whirlpools-rust-core@workspace:rust-sdk/core":
   version: 0.0.0-use.local
-  resolution: "@orca-so/whirlpools-rust-utils@workspace:rust-sdk/utils"
+  resolution: "@orca-so/whirlpools-rust-core@workspace:rust-sdk/core"
   languageName: unknown
   linkType: soft
 
@@ -3000,21 +3009,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orca-so/whirlpools-utils@npm:*, @orca-so/whirlpools-utils@workspace:ts-sdk/utils":
-  version: 0.0.0-use.local
-  resolution: "@orca-so/whirlpools-utils@workspace:ts-sdk/utils"
-  dependencies:
-    "@orca-so/whirlpools-rust-utils": "npm:*"
-    wasm-pack: "npm:^0.13.0"
-  languageName: unknown
-  linkType: soft
-
 "@orca-so/whirlpools@npm:*, @orca-so/whirlpools@workspace:ts-sdk/whirlpool":
   version: 0.0.0-use.local
   resolution: "@orca-so/whirlpools@workspace:ts-sdk/whirlpool"
   dependencies:
     "@orca-so/whirlpools-client": "npm:*"
-    "@orca-so/whirlpools-utils": "npm:*"
+    "@orca-so/whirlpools-core": "npm:*"
     typescript: "npm:^5.5.4"
   languageName: unknown
   linkType: soft

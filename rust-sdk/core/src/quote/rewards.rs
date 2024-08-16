@@ -1,5 +1,6 @@
 use core::ops::Shl;
 
+use ethnum::U256;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
@@ -32,6 +33,9 @@ use crate::{CollectRewardsQuote, U128};
 /// - `amount_owed_2`: The amount owed for reward token 2
 /// - `amount_owed_3`: The amount owed for reward token 3
 /// - `reward_last_updated_timestamp`: The timestamp when the rewards were last updated
+/// - `transfer_fee_1`: The transfer fee for reward token 1 in bps
+/// - `transfer_fee_2`: The transfer fee for reward token 2 in bps
+/// - `transfer_fee_3`: The transfer fee for reward token 3 in bps
 ///
 /// # Returns
 /// - `CollectRewardsQuote`: The rewards owed for the 3 reward tokens.
@@ -61,9 +65,12 @@ pub fn collect_rewards_quote(
     amount_owed_1: U128,
     amount_owed_2: U128,
     amount_owed_3: U128,
+    current_timestamp: i32,
     reward_last_updated_timestamp: i32,
+    transfer_fee_1: Option<u16>,
+    transfer_fee_2: Option<u16>,
+    transfer_fee_3: Option<u16>,
 ) -> CollectRewardsQuote {
-    let current_timestamp = 0; // TODO: get current timestamp
     let timestamp_delta = (current_timestamp - reward_last_updated_timestamp).unsigned_abs();
 
     let reward_emissions_per_second_1: u128 = reward_emissions_per_second_1.into();
@@ -79,18 +86,18 @@ pub fn collect_rewards_quote(
 
     if pool_liquidity != 0 {
         let reward_growth_delta_1 = reward_emissions_per_second_1
-            .wrapping_mul(timestamp_delta as u128)
-            .wrapping_div(pool_liquidity);
+            .saturating_mul(timestamp_delta as u128)
+            .saturating_div(pool_liquidity);
         reward_growth_1 += <u128>::try_from(reward_growth_delta_1).unwrap();
 
         let reward_growth_delta_2 = reward_emissions_per_second_2
-            .wrapping_mul(timestamp_delta as u128)
-            .wrapping_div(pool_liquidity);
+            .saturating_mul(timestamp_delta as u128)
+            .saturating_div(pool_liquidity);
         reward_growth_2 += <u128>::try_from(reward_growth_delta_2).unwrap();
 
         let reward_growth_delta_3 = reward_emissions_per_second_3
-            .wrapping_mul(timestamp_delta as u128)
-            .wrapping_div(pool_liquidity);
+            .saturating_mul(timestamp_delta as u128)
+            .saturating_div(pool_liquidity);
         reward_growth_3 += <u128>::try_from(reward_growth_delta_3).unwrap();
     }
 
@@ -103,58 +110,67 @@ pub fn collect_rewards_quote(
     let mut reward_growth_above_3: u128 = reward_growth_outside_3_upper.into();
 
     if tick_current_index < tick_lower_index {
-        reward_growth_below_1 = reward_growth_1.wrapping_sub(reward_growth_below_1);
-
-        reward_growth_below_2 = reward_growth_2.wrapping_sub(reward_growth_below_2);
-
-        reward_growth_below_3 = reward_growth_3.wrapping_sub(reward_growth_below_3);
+        reward_growth_below_1 = reward_growth_1.saturating_sub(reward_growth_below_1);
+        reward_growth_below_2 = reward_growth_2.saturating_sub(reward_growth_below_2);
+        reward_growth_below_3 = reward_growth_3.saturating_sub(reward_growth_below_3);
     }
 
     if tick_current_index > tick_upper_index {
-        reward_growth_above_1 = reward_growth_1.wrapping_sub(reward_growth_above_1);
-
-        reward_growth_above_2 = reward_growth_2.wrapping_sub(reward_growth_above_2);
-
-        reward_growth_above_3 = reward_growth_3.wrapping_sub(reward_growth_above_3);
+        reward_growth_above_1 = reward_growth_1.saturating_sub(reward_growth_above_1);
+        reward_growth_above_2 = reward_growth_2.saturating_sub(reward_growth_above_2);
+        reward_growth_above_3 = reward_growth_3.saturating_sub(reward_growth_above_3);
     }
 
     let reward_growth_inside_1 = reward_growth_1
-        .wrapping_sub(reward_growth_below_1)
-        .wrapping_sub(reward_growth_above_1);
+        .saturating_sub(reward_growth_below_1)
+        .saturating_sub(reward_growth_above_1);
 
     let reward_growth_inside_2 = reward_growth_2
-        .wrapping_sub(reward_growth_below_2)
-        .wrapping_sub(reward_growth_above_2);
+        .saturating_sub(reward_growth_below_2)
+        .saturating_sub(reward_growth_above_2);
 
     let reward_growth_inside_3 = reward_growth_3
-        .wrapping_sub(reward_growth_below_3)
-        .wrapping_sub(reward_growth_above_3);
+        .saturating_sub(reward_growth_below_3)
+        .saturating_sub(reward_growth_above_3);
 
     let reward_growth_inside_checkpoint_1: u128 = growth_inside_checkpoint_1.into();
     let reward_growth_inside_checkpoint_2: u128 = growth_inside_checkpoint_2.into();
     let reward_growth_inside_checkpoint_3: u128 = growth_inside_checkpoint_3.into();
 
-    let reward_growth_delta_1 = reward_growth_inside_1
-        .wrapping_sub(reward_growth_inside_checkpoint_1)
-        .wrapping_mul(position_liquidity);
+    let reward_growth_delta_1_x_64: U256 = <U256>::from(reward_growth_inside_1)
+        .saturating_sub(reward_growth_inside_checkpoint_1.into())
+        .saturating_mul(position_liquidity.into())
+        .shl(64);
 
-    let reward_growth_delta_2 = reward_growth_inside_2
-        .wrapping_sub(reward_growth_inside_checkpoint_2)
-        .wrapping_mul(position_liquidity);
+    let reward_growth_delta_2_x_64: U256 = <U256>::from(reward_growth_inside_2)
+        .saturating_sub(reward_growth_inside_checkpoint_2.into())
+        .saturating_mul(position_liquidity.into())
+        .shl(64);
 
-    let reward_growth_delta_3 = reward_growth_inside_3
-        .wrapping_sub(reward_growth_inside_checkpoint_3)
-        .wrapping_mul(position_liquidity);
+    let reward_growth_delta_3_x_64: U256 = <U256>::from(reward_growth_inside_3)
+        .saturating_sub(reward_growth_inside_checkpoint_3.into())
+        .saturating_mul(position_liquidity.into())
+        .shl(64);
+
+    let reward_growth_delta_1: u128 = reward_growth_delta_1_x_64.try_into().unwrap();
+    let reward_growth_delta_2: u128 = reward_growth_delta_2_x_64.try_into().unwrap();
+    let reward_growth_delta_3: u128 = reward_growth_delta_3_x_64.try_into().unwrap();
 
     let amount_owed_1: u128 = amount_owed_1.into();
     let amount_owed_2: u128 = amount_owed_2.into();
     let amount_owed_3: u128 = amount_owed_3.into();
 
-    let reward_owed_1 = amount_owed_1.shl(64) + reward_growth_delta_1.shl(64);
-    let reward_owed_2 = amount_owed_2.shl(64) + reward_growth_delta_2.shl(64);
-    let reward_owed_3 = amount_owed_3.shl(64) + reward_growth_delta_3.shl(64);
+    let withdrawable_reward_1 = amount_owed_1 + reward_growth_delta_1;
+    let withdrawable_reward_2 = amount_owed_2 + reward_growth_delta_2;
+    let withdrawable_reward_3 = amount_owed_3 + reward_growth_delta_3;
 
-    // TOOD: remove transfer fee deduction
+    let transfer_fee_1: u128 = transfer_fee_1.unwrap_or(0).into();
+    let transfer_fee_2: u128 = transfer_fee_2.unwrap_or(0).into();
+    let transfer_fee_3: u128 = transfer_fee_3.unwrap_or(0).into();
+
+    let reward_owed_1 = withdrawable_reward_1 - withdrawable_reward_1 * transfer_fee_1 / 10000u128;
+    let reward_owed_2 = withdrawable_reward_2 - withdrawable_reward_3 * transfer_fee_2 / 10000u128;
+    let reward_owed_3 = withdrawable_reward_3 - withdrawable_reward_3 * transfer_fee_3 / 10000u128;
 
     CollectRewardsQuote {
         reward_owed_1,
@@ -193,20 +209,15 @@ mod tests {
             200u128.into(),
             300u128.into(),
             0,
+            100,
+            None,
+            None,
+            None,
         );
 
-        assert_eq!(
-            quote1.reward_owed_1,
-            340282365076264057937093853202723373056
-        );
-        assert_eq!(
-            quote1.reward_owed_2,
-            340282364615095457939029470173678534656
-        );
-        assert_eq!(
-            quote1.reward_owed_3,
-            340282364153926857940965087144633696256
-        );
+        assert_eq!(quote1.reward_owed_1, 100);
+        assert_eq!(quote1.reward_owed_2, 200);
+        assert_eq!(quote1.reward_owed_3, 300);
     }
 
     #[test]
@@ -236,10 +247,14 @@ mod tests {
             200u128.into(),
             300u128.into(),
             100,
+            100,
+            None,
+            None,
+            None,
         );
 
-        assert_eq!(quote2.reward_owed_1, 50000);
-        assert_eq!(quote2.reward_owed_2, 100000);
-        assert_eq!(quote2.reward_owed_3, 150000);
+        assert_eq!(quote2.reward_owed_1, 100);
+        assert_eq!(quote2.reward_owed_2, 200);
+        assert_eq!(quote2.reward_owed_3, 300);
     }
 }
