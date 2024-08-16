@@ -11,6 +11,9 @@ pub type U128 = u128;
 use core::fmt::{Debug, Formatter, Result};
 
 #[cfg(feature = "wasm")]
+use ethnum::U256;
+
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
 #[cfg(feature = "wasm")]
