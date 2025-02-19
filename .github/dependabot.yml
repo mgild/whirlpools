@@ -5,6 +5,11 @@ updates:
     schedule:
       interval: "daily"
     labels: [ ]
+    groups:
+      docusaurus:
+        applies-to: version-updates
+        patterns:
+          - "@docusaurus/*"
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:

@@ -113,20 +113,26 @@ pub enum PoolInfo {
 /// # Example
 ///
 /// ```rust
-/// use solana_client::rpc_client::RpcClient;
+/// use orca_whirlpools::{
+///     fetch_splash_pool, set_whirlpools_config_address, PoolInfo, WhirlpoolsConfigInput,
+/// };
+/// use solana_client::nonblocking::rpc_client::RpcClient;
 /// use solana_sdk::pubkey::Pubkey;
-/// use orca_whirlpools::{fetch_splash_pool, PoolInfo, set_whirlpools_config_address, WhirlpoolsConfigInput};
 /// use std::str::FromStr;
 ///
-/// set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
-/// let rpc = RpcClient::new("https://api.devnet.solana.com");
-/// let token_1 = Pubkey::from_str("TOKEN_MINT_ONE").unwrap();
-/// let token_2 = Pubkey::from_str("TOKEN_MINT_TWO").unwrap();
+/// #[tokio::main]
+/// async fn main() {
+///     set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
+///     let rpc = RpcClient::new("https://api.devnet.solana.com".to_string());
+///     let token_a = Pubkey::from_str("So11111111111111111111111111111111111111112").unwrap();
+///     let token_b = Pubkey::from_str("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k").unwrap(); // devUSDC
 ///
-/// let pool_info = fetch_splash_pool(&rpc, token_1, token_2).unwrap();
-/// match pool_info {
-///     PoolInfo::Initialized(pool) => println!("Pool is initialized: {:?}", pool),
-///     PoolInfo::Uninitialized(pool) => println!("Pool is not initialized: {:?}", pool),
+///     let pool_info = fetch_splash_pool(&rpc, token_a, token_b).await.unwrap();
+///
+///     match pool_info {
+///         PoolInfo::Initialized(pool) => println!("Pool is initialized: {:?}", pool),
+///         PoolInfo::Uninitialized(pool) => println!("Pool is not initialized: {:?}", pool),
+///     }
 /// }
 /// ```
 pub async fn fetch_splash_pool(
@@ -164,21 +170,30 @@ pub async fn fetch_splash_pool(
 /// # Example
 ///
 /// ```rust
-/// use solana_client::rpc_client::RpcClient;
+/// use orca_whirlpools::{
+///     fetch_concentrated_liquidity_pool, set_whirlpools_config_address, PoolInfo,
+///     WhirlpoolsConfigInput,
+/// };
+/// use solana_client::nonblocking::rpc_client::RpcClient;
 /// use solana_sdk::pubkey::Pubkey;
-/// use orca_whirlpools::{fetch_concentrated_liquidity_pool, PoolInfo, set_whirlpools_config_address, WhirlpoolsConfigInput};
 /// use std::str::FromStr;
 ///
-/// set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
-/// let rpc = RpcClient::new("https://api.devnet.solana.com");
-/// let token_1 = Pubkey::from_str("TOKEN_MINT_ONE").unwrap();
-/// let token_2 = Pubkey::from_str("TOKEN_MINT_TWO").unwrap();
-/// let tick_spacing = 64;
+/// #[tokio::main]
+/// async fn main() {
+///     set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
+///     let rpc = RpcClient::new("https://api.devnet.solana.com".to_string());
+///     let token_a = Pubkey::from_str("So11111111111111111111111111111111111111112").unwrap();
+///     let token_b = Pubkey::from_str("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k").unwrap(); // devUSDC
+///     let tick_spacing = 64;
 ///
-/// let pool_info = fetch_concentrated_liquidity_pool(&rpc, token_1, token_2, tick_spacing).unwrap();
-/// match pool_info {
-///     PoolInfo::Initialized(pool) => println!("Pool is initialized: {:?}", pool),
-///     PoolInfo::Uninitialized(pool) => println!("Pool is not initialized: {:?}", pool),
+///     let pool_info = fetch_concentrated_liquidity_pool(&rpc, token_a, token_b, tick_spacing)
+///         .await
+///         .unwrap();
+///
+///     match pool_info {
+///         PoolInfo::Initialized(pool) => println!("Pool is initialized: {:?}", pool),
+///         PoolInfo::Uninitialized(pool) => println!("Pool is not initialized: {:?}", pool),
+///     }
 /// }
 /// ```
 pub async fn fetch_concentrated_liquidity_pool(
@@ -269,23 +284,29 @@ pub async fn fetch_concentrated_liquidity_pool(
 /// # Example
 ///
 /// ```rust
-/// use solana_client::rpc_client::RpcClient;
-/// use solana_sdk::pubkey::Pubkey;
 /// use orca_whirlpools::{
-///     fetch_whirlpools_by_token_pair, PoolInfo, set_whirlpools_config_address, WhirlpoolsConfigInput,
+///     fetch_whirlpools_by_token_pair, set_whirlpools_config_address, PoolInfo, WhirlpoolsConfigInput,
 /// };
+/// use solana_client::nonblocking::rpc_client::RpcClient;
+/// use solana_sdk::pubkey::Pubkey;
 /// use std::str::FromStr;
 ///
-/// set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
-/// let rpc = RpcClient::new("https://api.devnet.solana.com");
-/// let token_1 = Pubkey::from_str("TOKEN_MINT_ONE").unwrap();
-/// let token_2 = Pubkey::from_str("TOKEN_MINT_TWO").unwrap();
+/// #[tokio::main]
+/// async fn main() {
+///     set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
+///     let rpc = RpcClient::new("https://api.devnet.solana.com".to_string());
+///     let token_a = Pubkey::from_str("So11111111111111111111111111111111111111112").unwrap();
+///     let token_b = Pubkey::from_str("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k").unwrap(); // devUSDC
 ///
-/// let pools = fetch_whirlpools_by_token_pair(&rpc, token_1, token_2).unwrap();
-/// for pool in pools {
-///     match pool {
-///         PoolInfo::Initialized(pool) => println!("Initialized Pool: {:?}", pool),
-///         PoolInfo::Uninitialized(pool) => println!("Uninitialized Pool: {:?}", pool),
+///     let pool_infos = fetch_whirlpools_by_token_pair(&rpc, token_a, token_b)
+///         .await
+///         .unwrap();
+///
+///     for pool_info in pool_infos {
+///         match pool_info {
+///             PoolInfo::Initialized(pool) => println!("Pool is initialized: {:?}", pool),
+///             PoolInfo::Uninitialized(pool) => println!("Pool is not initialized: {:?}", pool),
+///         }
 ///     }
 /// }
 /// ```
@@ -335,9 +356,9 @@ pub async fn fetch_whirlpools_by_token_pair(
     let whirlpool_infos = rpc.get_multiple_accounts(&whirlpool_addresses).await?;
 
     let mut whirlpools: Vec<PoolInfo> = Vec::new();
-    for i in 0..whirlpool_infos.len() {
+    for i in 0..whirlpool_addresses.len() {
         let pool_address = whirlpool_addresses[i];
-        let pool_info = whirlpool_infos[i].as_ref();
+        let pool_info = whirlpool_infos.get(i).and_then(|x| x.as_ref());
         let fee_tier = &fee_tiers[i];
 
         if let Some(pool_info) = pool_info {
@@ -358,4 +379,170 @@ pub async fn fetch_whirlpools_by_token_pair(
     }
 
     Ok(whirlpools)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{
+        setup_ata_with_amount, setup_mint_with_decimals, setup_whirlpool, RpcContext,
+    };
+    use serial_test::serial;
+    use solana_program_test::tokio;
+
+    struct TestContext {
+        ctx: RpcContext,
+        mint_a: Pubkey,
+        mint_b: Pubkey,
+        splash_pool: Pubkey,
+        concentrated_pool: Pubkey,
+    }
+
+    impl TestContext {
+        async fn new() -> Result<Self, Box<dyn Error>> {
+            let ctx = RpcContext::new().await;
+            let mint_a = setup_mint_with_decimals(&ctx, 9).await?;
+            let mint_b = setup_mint_with_decimals(&ctx, 9).await?;
+
+            setup_ata_with_amount(&ctx, mint_a, 500_000_000_000).await?;
+            setup_ata_with_amount(&ctx, mint_b, 500_000_000_000).await?;
+
+            // Setup all pools
+            let concentrated_pool = setup_whirlpool(&ctx, mint_a, mint_b, 64).await?;
+            let splash_pool =
+                setup_whirlpool(&ctx, mint_a, mint_b, SPLASH_POOL_TICK_SPACING).await?;
+
+            Ok(Self {
+                ctx,
+                mint_a,
+                mint_b,
+                splash_pool,
+                concentrated_pool,
+            })
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_fetch_splash_pool() {
+        let test_ctx = TestContext::new().await.unwrap();
+
+        if let PoolInfo::Initialized(pool) =
+            fetch_splash_pool(&test_ctx.ctx.rpc, test_ctx.mint_a, test_ctx.mint_b)
+                .await
+                .unwrap()
+        {
+            assert_eq!(pool.data.liquidity, 0);
+            assert_eq!(pool.data.tick_spacing, SPLASH_POOL_TICK_SPACING);
+            assert_eq!(pool.address, test_ctx.splash_pool);
+            assert_eq!(pool.data.token_mint_a, test_ctx.mint_a);
+            assert_eq!(pool.data.token_mint_b, test_ctx.mint_b);
+            assert_eq!(pool.data.fee_rate, 1000);
+            assert_eq!(pool.data.protocol_fee_rate, 0);
+        } else {
+            panic!("Expected initialized pool");
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_fetch_concentrated_liquidity_pool() {
+        let test_ctx = TestContext::new().await.unwrap();
+
+        if let PoolInfo::Initialized(pool) = fetch_concentrated_liquidity_pool(
+            &test_ctx.ctx.rpc,
+            test_ctx.mint_a,
+            test_ctx.mint_b,
+            64,
+        )
+        .await
+        .unwrap()
+        {
+            assert_eq!(pool.data.liquidity, 0);
+            assert_eq!(pool.data.tick_spacing, 64);
+            assert_eq!(pool.address, test_ctx.concentrated_pool);
+            assert_eq!(pool.data.token_mint_a, test_ctx.mint_a);
+            assert_eq!(pool.data.token_mint_b, test_ctx.mint_b);
+            assert_eq!(pool.data.fee_rate, 300);
+            assert_eq!(pool.data.protocol_fee_rate, 0);
+        } else {
+            panic!("Expected initialized pool");
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_fetch_non_existent_pool() {
+        let test_ctx = TestContext::new().await.unwrap();
+
+        if let PoolInfo::Uninitialized(pool) = fetch_concentrated_liquidity_pool(
+            &test_ctx.ctx.rpc,
+            test_ctx.mint_a,
+            test_ctx.mint_b,
+            128,
+        )
+        .await
+        .unwrap()
+        {
+            assert_eq!(pool.tick_spacing, 128);
+            assert_eq!(pool.token_mint_a, test_ctx.mint_a);
+            assert_eq!(pool.token_mint_b, test_ctx.mint_b);
+            assert_eq!(pool.fee_rate, 1000);
+            assert_eq!(pool.protocol_fee_rate, 0);
+        } else {
+            panic!("Expected uninitialized pool");
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    #[ignore = "Skipped until solana-bankrun supports getProgramAccounts"]
+    async fn test_fetch_all_pools_for_pair() {
+        let test_ctx = TestContext::new().await.unwrap();
+
+        let pools =
+            fetch_whirlpools_by_token_pair(&test_ctx.ctx.rpc, test_ctx.mint_a, test_ctx.mint_b)
+                .await
+                .unwrap();
+
+        assert_eq!(pools.len(), 3); // 2 initialized + 1 uninitialized (128 tick spacing)
+
+        // Verify concentrated liquidity pool
+        let concentrated = pools
+            .iter()
+            .find(|p| match p {
+                PoolInfo::Initialized(p) => p.data.tick_spacing == 64,
+                _ => false,
+            })
+            .unwrap();
+        if let PoolInfo::Initialized(pool) = concentrated {
+            assert_eq!(pool.address, test_ctx.concentrated_pool);
+            assert_eq!(pool.data.fee_rate, 300);
+        }
+
+        // Verify splash pool
+        let splash = pools
+            .iter()
+            .find(|p| match p {
+                PoolInfo::Initialized(p) => p.data.tick_spacing == SPLASH_POOL_TICK_SPACING,
+                _ => false,
+            })
+            .unwrap();
+        if let PoolInfo::Initialized(pool) = splash {
+            assert_eq!(pool.address, test_ctx.splash_pool);
+            assert_eq!(pool.data.fee_rate, 1000);
+        }
+
+        // Verify uninitialized pool
+        let uninitialized = pools
+            .iter()
+            .find(|p| match p {
+                PoolInfo::Uninitialized(p) => p.tick_spacing == 128,
+                _ => false,
+            })
+            .unwrap();
+        if let PoolInfo::Uninitialized(pool) = uninitialized {
+            assert_eq!(pool.fee_rate, 1000);
+        }
+    }
 }

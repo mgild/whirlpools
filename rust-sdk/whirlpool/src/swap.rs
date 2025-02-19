@@ -144,32 +144,39 @@ async fn fetch_tick_arrays_or_default(
 /// # Example
 ///
 /// ```rust
-/// use solana_client::rpc_client::RpcClient;
-/// use solana_sdk::pubkey::Pubkey;
-/// use orca_whirlpools_sdk::{
-///     swap_instructions, SwapType, set_whirlpools_config_address, WhirlpoolsConfigInput,
+/// use crate::utils::load_wallet;
+/// use orca_whirlpools::{
+///     set_whirlpools_config_address, swap_instructions, SwapType, WhirlpoolsConfigInput,
 /// };
+/// use solana_client::nonblocking::rpc_client::RpcClient;
+/// use solana_sdk::pubkey::Pubkey;
+/// use std::str::FromStr;
 ///
-/// set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
-/// let rpc = RpcClient::new("https://api.devnet.solana.com");
+/// #[tokio::main]
+/// async fn main() {
+///     set_whirlpools_config_address(WhirlpoolsConfigInput::SolanaDevnet).unwrap();
+///     let rpc = RpcClient::new("https://api.devnet.solana.com".to_string());
+///     let wallet = load_wallet();
+///     let whirlpool_address =
+///         Pubkey::from_str("3KBZiL2g8C7tiJ32hTv5v3KM7aK9htpqTw4cTXz1HvPt").unwrap();
+///     let mint_address = Pubkey::from_str("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k").unwrap();
+///     let input_amount = 1_000_000;
 ///
-/// let whirlpool_pubkey = Pubkey::from_str("WHIRLPOOL_ADDRESS").unwrap();
-/// let amount = 1_000_000; // Amount to swap.
-/// let specified_mint = Pubkey::from_str("SPECIFIED_MINT_ADDRESS").unwrap();
-/// let slippage_tolerance_bps = Some(100);
+///     let result = swap_instructions(
+///         &rpc,
+///         whirlpool_address,
+///         input_amount,
+///         mint_address,
+///         SwapType::ExactIn,
+///         Some(100),
+///         Some(wallet.pubkey()),
+///     )
+///     .await
+///     .unwrap();
 ///
-/// let swap_instructions = swap_instructions(
-///     &rpc,
-///     whirlpool_pubkey,
-///     amount,
-///     specified_mint,
-///     SwapType::ExactIn,
-///     slippage_tolerance_bps,
-///     None,
-/// ).unwrap();
-///
-/// println!("Number of Instructions: {}", swap_instructions.instructions.len());
-/// println!("Swap Quote: {:?}", swap_instructions.quote);
+///     println!("Quote estimated token out: {:?}", result.quote);
+///     println!("Number of Instructions: {}", result.instructions.len());
+/// }
 /// ```
 pub async fn swap_instructions(
     rpc: &RpcClient,
@@ -315,4 +322,285 @@ pub async fn swap_instructions(
         quote,
         additional_signers: token_accounts.additional_signers,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+    use std::error::Error;
+
+    use rstest::rstest;
+    use serial_test::serial;
+    use solana_client::nonblocking::rpc_client::RpcClient;
+    use solana_program_test::tokio;
+    use solana_sdk::{
+        program_pack::Pack,
+        pubkey::Pubkey,
+        signer::{keypair::Keypair, Signer},
+    };
+    use spl_token::state::Account as TokenAccount;
+    use spl_token_2022::{
+        extension::StateWithExtensionsOwned, state::Account as TokenAccount2022,
+        ID as TOKEN_2022_PROGRAM_ID,
+    };
+
+    use crate::{
+        increase_liquidity_instructions, swap_instructions,
+        tests::{
+            setup_ata_te, setup_ata_with_amount, setup_mint_te, setup_mint_te_fee,
+            setup_mint_with_decimals, setup_position, setup_whirlpool, RpcContext, SetupAtaConfig,
+        },
+        IncreaseLiquidityParam, SwapInstructions, SwapQuote, SwapType,
+    };
+
+    async fn get_token_balance(rpc: &RpcClient, address: Pubkey) -> Result<u64, Box<dyn Error>> {
+        let account_data = rpc.get_account(&address).await?;
+        if account_data.owner == TOKEN_2022_PROGRAM_ID {
+            let parsed = StateWithExtensionsOwned::<TokenAccount2022>::unpack(account_data.data)?;
+            Ok(parsed.base.amount)
+        } else {
+            let parsed = TokenAccount::unpack(&account_data.data)?;
+            Ok(parsed.amount)
+        }
+    }
+
+    async fn setup_all_mints(
+        ctx: &RpcContext,
+    ) -> Result<HashMap<&'static str, Pubkey>, Box<dyn Error>> {
+        let mint_a = setup_mint_with_decimals(ctx, 9).await?;
+        let mint_b = setup_mint_with_decimals(ctx, 9).await?;
+        let mint_te_a = setup_mint_te(ctx, &[]).await?;
+        let mint_te_b = setup_mint_te(ctx, &[]).await?;
+        let mint_tefee = setup_mint_te_fee(ctx).await?;
+
+        let mut out = HashMap::new();
+        out.insert("A", mint_a);
+        out.insert("B", mint_b);
+        out.insert("TEA", mint_te_a);
+        out.insert("TEB", mint_te_b);
+        out.insert("TEFee", mint_tefee);
+        Ok(out)
+    }
+
+    async fn setup_all_atas(
+        ctx: &RpcContext,
+        minted: &HashMap<&str, Pubkey>,
+    ) -> Result<HashMap<&'static str, Pubkey>, Box<dyn Error>> {
+        // Give each user ATA a large balance
+        let token_balance = 1_000_000_000;
+
+        let ata_a = setup_ata_with_amount(ctx, minted["A"], token_balance).await?;
+        let ata_b = setup_ata_with_amount(ctx, minted["B"], token_balance).await?;
+        let ata_te_a = setup_ata_te(
+            ctx,
+            minted["TEA"],
+            Some(SetupAtaConfig {
+                amount: Some(token_balance),
+            }),
+        )
+        .await?;
+        let ata_te_b = setup_ata_te(
+            ctx,
+            minted["TEB"],
+            Some(SetupAtaConfig {
+                amount: Some(token_balance),
+            }),
+        )
+        .await?;
+        let ata_tefee = setup_ata_te(
+            ctx,
+            minted["TEFee"],
+            Some(SetupAtaConfig {
+                amount: Some(token_balance),
+            }),
+        )
+        .await?;
+
+        let mut out = HashMap::new();
+        out.insert("A", ata_a);
+        out.insert("B", ata_b);
+        out.insert("TEA", ata_te_a);
+        out.insert("TEB", ata_te_b);
+        out.insert("TEFee", ata_tefee);
+        Ok(out)
+    }
+
+    fn parse_pool_name(pool: &str) -> (&'static str, &'static str) {
+        match pool {
+            "A-B" => ("A", "B"),
+            "A-TEA" => ("A", "TEA"),
+            "TEA-TEB" => ("TEA", "TEB"),
+            "A-TEFee" => ("A", "TEFee"),
+            _ => panic!("Unknown pool combo: {}", pool),
+        }
+    }
+
+    async fn verify_swap(
+        ctx: &RpcContext,
+        swap_ix: &SwapInstructions,
+        user_ata_for_final_a: Pubkey,
+        user_ata_for_final_b: Pubkey,
+        a_to_b: bool,
+    ) -> Result<(), Box<dyn Error>> {
+        let before_a = get_token_balance(&ctx.rpc, user_ata_for_final_a).await?;
+        let before_b = get_token_balance(&ctx.rpc, user_ata_for_final_b).await?;
+
+        // do swap
+        let signers: Vec<&Keypair> = swap_ix.additional_signers.iter().collect();
+        ctx.send_transaction_with_signers(swap_ix.instructions.clone(), signers)
+            .await?;
+
+        let after_a = get_token_balance(&ctx.rpc, user_ata_for_final_a).await?;
+        let after_b = get_token_balance(&ctx.rpc, user_ata_for_final_b).await?;
+
+        let used_a = before_a.saturating_sub(after_a);
+        let used_b = before_b.saturating_sub(after_b);
+        let gained_a = after_a.saturating_sub(before_a);
+        let gained_b = after_b.saturating_sub(before_b);
+
+        match &swap_ix.quote {
+            SwapQuote::ExactIn(q) => {
+                if a_to_b {
+                    assert_eq!(used_a, q.token_in, "Used A mismatch");
+                    assert_eq!(gained_b, q.token_est_out, "Gained B mismatch");
+                } else {
+                    assert_eq!(used_b, q.token_in, "Used B mismatch");
+                    assert_eq!(gained_a, q.token_est_out, "Gained A mismatch");
+                }
+            }
+            SwapQuote::ExactOut(q) => {
+                if a_to_b {
+                    assert_eq!(gained_b, q.token_out, "Gained B mismatch");
+                    assert_eq!(used_a, q.token_est_in, "Used A mismatch");
+                } else {
+                    assert_eq!(gained_a, q.token_out, "Gained A mismatch");
+                    assert_eq!(used_b, q.token_est_in, "Used B mismatch");
+                }
+            }
+        }
+        Ok(())
+    }
+
+    #[rstest]
+    #[case("A-B", true, SwapType::ExactIn, 1000)]
+    #[case("A-B", true, SwapType::ExactOut, 500)]
+    #[case("A-B", false, SwapType::ExactIn, 200)]
+    #[case("A-B", false, SwapType::ExactOut, 100)]
+    #[case("A-TEA", true, SwapType::ExactIn, 1000)]
+    #[case("A-TEA", true, SwapType::ExactOut, 500)]
+    #[case("A-TEA", false, SwapType::ExactIn, 200)]
+    #[case("A-TEA", false, SwapType::ExactOut, 100)]
+    #[case("TEA-TEB", true, SwapType::ExactIn, 1000)]
+    #[case("TEA-TEB", true, SwapType::ExactOut, 500)]
+    #[case("TEA-TEB", false, SwapType::ExactIn, 200)]
+    #[case("TEA-TEB", false, SwapType::ExactOut, 100)]
+    #[case("A-TEFee", true, SwapType::ExactIn, 1000)]
+    #[case("A-TEFee", true, SwapType::ExactOut, 500)]
+    #[case("A-TEFee", false, SwapType::ExactIn, 200)]
+    #[case("A-TEFee", false, SwapType::ExactOut, 100)]
+    #[serial]
+    fn test_swap_scenarios(
+        #[case] pool_name: &str,
+        #[case] a_to_b: bool,
+        #[case] swap_type: SwapType,
+        #[case] amount: u64,
+    ) {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let ctx = RpcContext::new().await;
+
+            let minted = setup_all_mints(&ctx).await.unwrap();
+            let user_atas = setup_all_atas(&ctx, &minted).await.unwrap();
+
+            let (mkey_a, mkey_b) = parse_pool_name(pool_name);
+            let pubkey_a = minted[mkey_a];
+            let pubkey_b = minted[mkey_b];
+
+            let tick_spacing = 64;
+            let (final_a, final_b) = if pubkey_a < pubkey_b {
+                (pubkey_a, pubkey_b)
+            } else {
+                (pubkey_b, pubkey_a)
+            };
+
+            let pool_pubkey = setup_whirlpool(&ctx, final_a, final_b, tick_spacing)
+                .await
+                .unwrap();
+
+            let position_mint = setup_position(
+                &ctx,
+                pool_pubkey,
+                Some((-192, 192)), // aligned to spacing=64
+                None,
+            )
+            .await
+            .unwrap();
+
+            let liq_ix = increase_liquidity_instructions(
+                &ctx.rpc,
+                position_mint,
+                IncreaseLiquidityParam::Liquidity(1_000_000),
+                Some(100), // 1% slippage
+                Some(ctx.signer.pubkey()),
+            )
+            .await
+            .unwrap();
+            ctx.send_transaction_with_signers(
+                liq_ix.instructions,
+                liq_ix.additional_signers.iter().collect(),
+            )
+            .await
+            .unwrap();
+
+            let user_ata_for_final_a = if final_a == pubkey_a {
+                user_atas[mkey_a]
+            } else {
+                user_atas[mkey_b]
+            };
+            let user_ata_for_final_b = if final_b == pubkey_b {
+                user_atas[mkey_b]
+            } else {
+                user_atas[mkey_a]
+            };
+
+            let token_for_this_call = match swap_type {
+                SwapType::ExactIn => {
+                    if a_to_b {
+                        final_a
+                    } else {
+                        final_b
+                    }
+                }
+                SwapType::ExactOut => {
+                    if a_to_b {
+                        final_b
+                    } else {
+                        final_a
+                    }
+                }
+            };
+
+            let swap_ix = swap_instructions(
+                &ctx.rpc,
+                pool_pubkey,
+                amount,
+                token_for_this_call,
+                swap_type.clone(),
+                Some(100), // slippage
+                Some(ctx.signer.pubkey()),
+            )
+            .await
+            .unwrap();
+
+            verify_swap(
+                &ctx,
+                &swap_ix,
+                user_ata_for_final_a,
+                user_ata_for_final_b,
+                a_to_b,
+            )
+            .await
+            .unwrap();
+        });
+    }
 }
