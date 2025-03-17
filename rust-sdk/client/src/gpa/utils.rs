@@ -36,6 +36,7 @@ pub(crate) fn rpc_program_accounts_config(filters: Vec<RpcFilterType>) -> RpcPro
         },
         with_context: None,
         sort_results: None,
+        ..Default::default()
     }
 }
 
