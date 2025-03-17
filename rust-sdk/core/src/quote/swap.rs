@@ -6,7 +6,7 @@ use crate::{
     CoreError, ExactInSwapQuote, ExactOutSwapQuote, TickArraySequence, TickArrays, TickFacade,
     TransferFee, WhirlpoolFacade, AMOUNT_EXCEEDS_MAX_U64, ARITHMETIC_OVERFLOW,
     INVALID_SQRT_PRICE_LIMIT_DIRECTION, MAX_SQRT_PRICE, MIN_SQRT_PRICE,
-    SQRT_PRICE_LIMIT_OUT_OF_BOUNDS, ZERO_TRADABLE_AMOUNT,
+    SQRT_PRICE_LIMIT_OUT_OF_BOUNDS, ZERO_TRADABLE_AMOUNT, LOOP_LIMIT_REACHED,
 };
 
 #[cfg(feature = "wasm")]
@@ -215,7 +215,12 @@ pub fn compute_swap<const SIZE: usize>(
     let mut current_liquidity = whirlpool.liquidity;
     let mut trade_fee = 0u64;
 
+    let mut loop_limit = 20;
     while amount_remaining > 0 && sqrt_price_limit != current_sqrt_price {
+        loop_limit -= 1;
+        if loop_limit == 0 {
+            return Err(LOOP_LIMIT_REACHED);
+        }
         let (next_tick, next_tick_index) = if a_to_b {
             tick_sequence.prev_initialized_tick(current_tick_index)?
         } else {
