@@ -29,6 +29,8 @@ orca_whirlpools_client = { path = "../client", features = ["fetch"] }
 bincode = { version = "^1.3" }
 serde = { version = "^1.0" }
 serde_json = { version = "^1.0" }
+ahash = "=0.7.8"
+
 
 [dev-dependencies]
 serial_test = { version = "^3.1" }

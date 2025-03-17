@@ -18,3 +18,5 @@ proc-macro = true
 syn = { version = "^2", features = ["full"] }
 quote = { version = "^1" }
 proc-macro2 = { version = "^1" }
+ahash = "=0.7.8"
+

@@ -12,7 +12,7 @@ authors = ["team@orca.so"]
 edition = "2021"
 
 [features]
-default = ["core-types"]
+default = ["core-types", "serde", "fetch", "anchor"]
 anchor = ["dep:anchor-lang"]
 anchor-idl-build = []
 core-types = ["dep:orca_whirlpools_core"]
@@ -34,3 +34,5 @@ solana-sdk = { version = ">=1.16, <3.0", optional = true }
 solana-client = { version = ">=1.16, <3.0", optional = true }
 solana-account-decoder = { version = ">=1.16, <3.0", optional = true }
 thiserror = { version = "^2.0" }
+ahash = "=0.7.8"
+
