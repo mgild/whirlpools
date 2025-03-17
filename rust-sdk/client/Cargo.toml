@@ -12,7 +12,7 @@ authors = ["team@orca.so"]
 edition = "2021"
 
 [features]
-default = ["core-types", "serde", "fetch", "anchor"]
+default = ["core-types", "serde", "fetch"]
 anchor = ["dep:anchor-lang"]
 anchor-idl-build = []
 core-types = ["dep:orca_whirlpools_core"]
