@@ -30,6 +30,7 @@ bincode = { version = "^1.3" }
 serde = { version = "^1.0" }
 serde_json = { version = "^1.0" }
 ahash = "=0.7.8"
+spl-associated-token-account = { version = "<3" }
 
 
 [dev-dependencies]
