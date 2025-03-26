@@ -10,7 +10,7 @@ use anchor_lang::prelude::*;
 use super::WhirlpoolsConfig;
 
 #[account]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Whirlpool {
     pub whirlpools_config: Pubkey, // 32
     pub whirlpool_bump: [u8; 1],   // 1
